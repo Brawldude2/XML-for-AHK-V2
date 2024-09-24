@@ -59,7 +59,9 @@ class XML{
             this._ParseVersion()
             this.FindUntilNext("<")
         }
-        return this._Parse(this._XML_Container) ;Start parsing
+        root := this._Parse(this._XML_Container)
+        root.__Declaration := this._XML_Declaration
+        return root
     }
 
     Serialise(XML_Obj,indent_character){
@@ -264,12 +266,27 @@ class XML_Element{
     }
 
     toString(indent_character){
+        str := ""
+
+        if(this.HasProp("__Declaration")){
+            if(this.__Declaration.__attrib.Count){
+                str := str " <?xml"
+                for k,v in this.__Declaration.__attrib{
+                    if(InStr(v,'"') and InStr(v,"'")){
+                        throw Error("XML_Serialise: Cant have both quote symbols at the same time.")
+                    }
+                    str := str " " k '="' v '"'
+                }
+                str := str "?>"
+            }
+        }
+
         one_line_element := true
         indented := "`n"
         loop this.depth{
             indented := indented indent_character
         }
-        str := indented "<" this.tag
+        str := str indented "<" this.tag
 
         for k,v in this.__attrib{
             if(InStr(v,'"') and InStr(v,"'")){
